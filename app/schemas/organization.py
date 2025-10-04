@@ -8,7 +8,6 @@ class OrganizationBase(BaseModel):
     description: Optional[str] = None
     email: Optional[EmailStr] = None
     website: Optional[str] = None
-    is_active: bool = True
     building_id: int
 
 
@@ -24,7 +23,6 @@ class OrganizationUpdate(BaseModel):
     description: Optional[str] = None
     email: Optional[EmailStr] = None
     website: Optional[str] = None
-    is_active: Optional[bool] = None
     building_id: Optional[int] = None
     phone_numbers: Optional[List[str]] = None
     activity_ids: Optional[List[int]] = None
