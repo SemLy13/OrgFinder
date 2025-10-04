@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic[email]
+sqlalchemy[asyncio]
+alembic
+asyncpg
+python-multipart
+python-dotenv
