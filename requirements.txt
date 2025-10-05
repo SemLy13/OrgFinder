@@ -1,8 +1,10 @@
 fastapi
 uvicorn[standard]
 pydantic[email]
+pydantic-settings
 sqlalchemy[asyncio]
 alembic
 asyncpg
+psycopg2-binary
 python-multipart
 python-dotenv

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgresql+asyncpg://orgfinder_user:orgfinder_pass@db:5432/orgfinder
+      API_KEY: ${API_KEY}
+      RELOAD: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Запуск миграций...' &&
+        alembic upgrade head &&
+        echo 'Миграции выполнены' &&
+        echo 'Заполнение тестовыми данными...' &&
+        python seed_data.py &&
+        echo 'Тестовые данные созданы' &&
+        echo 'Запуск приложения...' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: orgfinder
+      POSTGRES_USER: orgfinder_user
+      POSTGRES_PASSWORD: orgfinder_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orgfinder_user -d orgfinder"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

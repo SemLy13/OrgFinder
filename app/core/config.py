@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     )
 
     ALLOWED_ORIGINS: List[str] = ["*"]
+    API_KEY: str = os.getenv("API_KEY", "static_api_key")
 
     model_config = {"env_file": ".env"}
 

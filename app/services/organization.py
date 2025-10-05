@@ -1,18 +1,30 @@
 from typing import List, Optional, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from app.models.organization import Organization
 from app.models.building import Building
 from app.models.activity import Activity
 from app.models.associations import organization_activities
-from app.services.base import BaseService
 
 
-class OrganizationService(BaseService[Organization]):
+class OrganizationService:
     """Сервис для работы с организациями"""
 
-    def __init__(self):
-        super().__init__(Organization)
+    async def get_all(
+        self, db: AsyncSession, skip: int = 0, limit: int = 100
+    ) -> List[Organization]:
+        """Получить все организации"""
+        result = await db.execute(
+            select(Organization)
+            .options(
+                selectinload(Organization.activities),
+                selectinload(Organization.phones)
+            )
+            .offset(skip)
+            .limit(limit)
+        )
+        return result.scalars().all()
 
     async def get_by_id(
         self, db: AsyncSession, organization_id: int
@@ -20,6 +32,10 @@ class OrganizationService(BaseService[Organization]):
         """Получить организацию по ID"""
         result = await db.execute(
             select(Organization)
+            .options(
+                selectinload(Organization.activities),
+                selectinload(Organization.phones)
+            )
             .where(Organization.id == organization_id)
         )
         return result.scalar_one_or_none()
@@ -30,6 +46,10 @@ class OrganizationService(BaseService[Organization]):
         """Поиск организаций по названию"""
         result = await db.execute(
             select(Organization)
+            .options(
+                selectinload(Organization.activities),
+                selectinload(Organization.phones)
+            )
             .where(Organization.name.ilike(f"%{name}%"))
             .offset(skip)
             .limit(limit)
@@ -46,6 +66,10 @@ class OrganizationService(BaseService[Organization]):
         """Список организаций, относящихся к указанной деятельности"""
         result = await db.execute(
             select(Organization)
+            .options(
+                selectinload(Organization.activities),
+                selectinload(Organization.phones)
+            )
             .join(
                 organization_activities,
                 Organization.id == organization_activities.c.organization_id,
@@ -90,6 +114,10 @@ class OrganizationService(BaseService[Organization]):
 
         result = await db.execute(
             select(Organization)
+            .options(
+                selectinload(Organization.activities),
+                selectinload(Organization.phones)
+            )
             .join(
                 organization_activities,
                 Organization.id == organization_activities.c.organization_id,
@@ -130,6 +158,10 @@ class OrganizationService(BaseService[Organization]):
 
         query = (
             select(Organization, distance_expr.label('distance'))
+            .options(
+                selectinload(Organization.activities),
+                selectinload(Organization.phones)
+            )
             .join(Building, Organization.building_id == Building.id)
             .where(distance_expr <= radius_m)
             .order_by('distance')
@@ -166,6 +198,10 @@ class OrganizationService(BaseService[Organization]):
         """Поиск организаций в прямоугольной области"""
         query = (
             select(Organization)
+            .options(
+                selectinload(Organization.activities),
+                selectinload(Organization.phones)
+            )
             .join(Building, Organization.building_id == Building.id)
             .where(
                 Building.latitude.between(min_latitude, max_latitude),
@@ -189,3 +225,36 @@ class OrganizationService(BaseService[Organization]):
 
         result = await db.execute(query)
         return result.scalars().all()
+
+    async def create(self, db: AsyncSession, data: dict) -> Organization:
+        """Создать новую организацию"""
+        organization = Organization(**data)
+        db.add(organization)
+        await db.commit()
+        await db.refresh(organization)
+        return organization
+
+    async def update(
+        self, db: AsyncSession, organization_id: int, data: dict
+    ) -> Organization:
+        """Обновить организацию"""
+        organization = await self.get_by_id(db, organization_id)
+        if not organization:
+            return None
+
+        for key, value in data.items():
+            setattr(organization, key, value)
+
+        await db.commit()
+        await db.refresh(organization)
+        return organization
+
+    async def delete(self, db: AsyncSession, organization_id: int) -> bool:
+        """Удалить организацию"""
+        organization = await self.get_by_id(db, organization_id)
+        if not organization:
+            return False
+
+        await db.delete(organization)
+        await db.commit()
+        return True

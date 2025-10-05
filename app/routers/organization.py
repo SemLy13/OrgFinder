@@ -39,7 +39,7 @@ async def get_organizations(
         return await organization_service.get_all(db, skip, limit)
 
 
-@router.get("/{organization_id}", response_model=Organization)
+@router.get("/{organization_id}/", response_model=Organization)
 async def get_organization(
     organization_id: int,
     db: AsyncSession = Depends(get_db)
@@ -80,7 +80,7 @@ async def delete_organization(
     return {"message": "Организация удалена"}
 
 
-@router.get("/by-activity/{activity_id}", response_model=List[Organization])
+@router.get("/by-activity/{activity_id}/", response_model=List[Organization])
 async def get_organizations_by_activity(
     activity_id: int,
     skip: int = Query(0, ge=0),
@@ -94,7 +94,7 @@ async def get_organizations_by_activity(
 
 
 @router.get(
-    "/by-activity-tree/{activity_id}",
+    "/by-activity-tree/{activity_id}/",
     response_model=List[Organization]
 )
 async def get_organizations_by_activity_tree(
@@ -163,3 +163,38 @@ async def search_organizations_by_rectangle(
         search_text=request.search_text,
         limit=request.limit
     )
+
+
+@router.get("/activities/tree/")
+async def get_activities_tree(db: AsyncSession = Depends(get_db)):
+    """Получить дерево деятельностей с уровнями вложенности"""
+    from app.models.activity import Activity
+    from sqlalchemy import select
+    
+    # Получаем все деятельности
+    result = await db.execute(select(Activity))
+    activities = result.scalars().all()
+    
+    # Группируем по уровням
+    tree = {
+        "level_1": [],
+        "level_2": [],
+        "level_3": []
+    }
+    
+    for activity in activities:
+        level_data = {
+            "id": activity.id,
+            "name": activity.name,
+            "parent_id": activity.parent_id,
+            "level": activity.level
+        }
+        
+        if activity.level == 1:
+            tree["level_1"].append(level_data)
+        elif activity.level == 2:
+            tree["level_2"].append(level_data)
+        elif activity.level == 3:
+            tree["level_3"].append(level_data)
+    
+    return tree

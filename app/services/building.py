@@ -1,6 +1,7 @@
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.models.building import Building
 from app.models.organization import Organization
 
@@ -32,6 +33,10 @@ class BuildingService:
         """Список организаций в конкретном здании"""
         result = await db.execute(
             select(Organization)
+            .options(
+                selectinload(Organization.activities),
+                selectinload(Organization.phones)
+            )
             .where(Organization.building_id == building_id)
             .offset(skip)
             .limit(limit)
