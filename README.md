@@ -67,4 +67,5 @@ docker-compose up -d
 - API ключ: `static_api_key`
 - Порт: 8000
 
-#Стэк FastAPI + PyDantic + SQLAlchemy + Alembic + PostgreSQL + Docker
+# Стэк FastAPI + PyDantic + SQLAlchemy + Alembic + PostgreSQL + Docker
+
