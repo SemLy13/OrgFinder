@@ -1,0 +1,48 @@
+Table buildings {
+  id integer [pk, increment]
+  address text [not null]
+  latitude float [not null]
+  longitude float [not null]
+  
+  indexes {
+    id
+  }
+}
+
+Table organizations {
+  id integer [pk, increment]
+  name varchar(255) [not null]
+  building_id integer [not null, ref: > buildings.id]
+  
+  indexes {
+    id
+    name
+  }
+}
+
+Table organization_phones {
+  id integer [pk, increment]
+  phone_number varchar(50) [not null]
+  organization_id integer [not null, ref: > organizations.id]
+  
+  indexes {
+    id
+  }
+}
+
+Table activities {
+  id integer [pk, increment]
+  name varchar(255) [not null]
+  parent_id integer [ref: > activities.id]
+  level integer [not null]
+  
+  indexes {
+    id
+    name
+  }
+}
+
+Table organization_activities {
+  organization_id integer [pk, ref: > organizations.id]
+  activity_id integer [pk, ref: > activities.id]
+}
