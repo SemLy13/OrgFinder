@@ -2,6 +2,8 @@
 
 API для поиска организаций с иерархической системой деятельностей и географическим поиском.
 
+## DB: https://dbdiagram.io/d/OrgFinder-68e41249d2b621e4228728e0
+
 ## Быстрый запуск
 
 ```bash
@@ -68,4 +70,5 @@ docker-compose up -d
 - Порт: 8000
 
 # Стэк FastAPI + PyDantic + SQLAlchemy + Alembic + PostgreSQL + Docker
+
 
